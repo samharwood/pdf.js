@@ -43,6 +43,8 @@ const UI_NOTIFICATION_CLASS = "pdfSidebarNotification";
  *   the attachments view.
  * @property {HTMLButtonElement} layersButton - The button used to show
  *   the layers view.
+ * @property {HTMLButtonElement} ttsButton - The button used to show
+ *   the TTS view.
  * @property {HTMLDivElement} thumbnailView - The container in which
  *   the thumbnails are placed.
  * @property {HTMLDivElement} outlineView - The container in which
@@ -51,6 +53,8 @@ const UI_NOTIFICATION_CLASS = "pdfSidebarNotification";
  *   the attachments are placed.
  * @property {HTMLDivElement} layersView - The container in which
  *   the layers are placed.
+ * @property {HTMLDivElement} ttsView - The container in which
+ *   the TTS options are placed.
  * @property {HTMLDivElement} outlineOptionsContainer - The container in which
  *   the outline view-specific option button(s) are placed.
  * @property {HTMLButtonElement} currentOutlineItemButton - The button used to
@@ -83,11 +87,13 @@ class PDFSidebar {
     this.outlineButton = elements.outlineButton;
     this.attachmentsButton = elements.attachmentsButton;
     this.layersButton = elements.layersButton;
+    this.ttsButton = elements.ttsButton;
 
     this.thumbnailView = elements.thumbnailView;
     this.outlineView = elements.outlineView;
     this.attachmentsView = elements.attachmentsView;
     this.layersView = elements.layersView;
+    this.ttsView = elements.ttsView;
 
     this._outlineOptionsContainer = elements.outlineOptionsContainer;
     this._currentOutlineItemButton = elements.currentOutlineItemButton;
@@ -107,6 +113,7 @@ class PDFSidebar {
     this.outlineButton.disabled = false;
     this.attachmentsButton.disabled = false;
     this.layersButton.disabled = false;
+    this.ttsButton.disabled = false;
     this._currentOutlineItemButton.disabled = true;
   }
 
@@ -131,6 +138,10 @@ class PDFSidebar {
 
   get isLayersViewVisible() {
     return this.isOpen && this.active === SidebarView.LAYERS;
+  }
+
+  get isTTSViewVisible() {
+    return this.isOpen && this.active === SidebarView.TTS;
   }
 
   /**
@@ -201,6 +212,11 @@ class PDFSidebar {
           return false;
         }
         break;
+      case SidebarView.TTS:
+        if (this.ttsButton.disabled) {
+          return false;
+        }
+        break;
       default:
         console.error(`PDFSidebar._switchView: "${view}" is not a valid view.`);
         return false;
@@ -223,6 +239,7 @@ class PDFSidebar {
       view === SidebarView.ATTACHMENTS
     );
     this.layersButton.classList.toggle("toggled", view === SidebarView.LAYERS);
+    this.ttsButton.classList.toggle("toggled", view === SidebarView.TTS);
     // ... and for all views.
     this.thumbnailView.classList.toggle("hidden", view !== SidebarView.THUMBS);
     this.outlineView.classList.toggle("hidden", view !== SidebarView.OUTLINE);
@@ -231,7 +248,7 @@ class PDFSidebar {
       view !== SidebarView.ATTACHMENTS
     );
     this.layersView.classList.toggle("hidden", view !== SidebarView.LAYERS);
-
+    this.ttsView.classList.toggle("hidden", view !== SidebarView.TTS);
     // Finally, update view-specific CSS classes.
     this._outlineOptionsContainer.classList.toggle(
       "hidden",
@@ -404,6 +421,10 @@ class PDFSidebar {
       this.eventBus.dispatch("resetlayers", { source: this });
     });
 
+    this.ttsButton.addEventListener("click", () => {
+      this.switchView(SidebarView.TTS);
+    });
+
     // Buttons for view-specific options.
     this._currentOutlineItemButton.addEventListener("click", () => {
       this.eventBus.dispatch("currentoutlineitem", { source: this });
@@ -414,7 +435,9 @@ class PDFSidebar {
       button.disabled = !count;
 
       if (count) {
-        this._showUINotification();
+        if (view !== SidebarView.TTS) {
+          this._showUINotification(view);
+        }
       } else if (this.active === view) {
         // If the `view` was opened by the user during document load,
         // switch away from it if it turns out to be empty.
@@ -442,6 +465,10 @@ class PDFSidebar {
 
     this.eventBus._on("layersloaded", evt => {
       onTreeLoaded(evt.layersCount, this.layersButton, SidebarView.LAYERS);
+    });
+
+    this.eventBus._on("ttsloaded", evt => {
+      onTreeLoaded(evt.ttsAvailable, this.ttsButton, SidebarView.TTS);
     });
 
     // Update the thumbnailViewer, if visible, when exiting presentation mode.
