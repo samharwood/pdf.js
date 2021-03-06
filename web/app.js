@@ -75,6 +75,7 @@ import { PDFScriptingManager } from "./pdf_scripting_manager.js";
 import { PDFSidebar } from "./pdf_sidebar.js";
 import { PDFSidebarResizer } from "./pdf_sidebar_resizer.js";
 import { PDFThumbnailViewer } from "./pdf_thumbnail_viewer.js";
+import { PDFTTSViewer } from "./pdf_tts_viewer.js";
 import { PDFViewer } from "./pdf_viewer.js";
 import { SecondaryToolbar } from "./secondary_toolbar.js";
 import { Toolbar } from "./toolbar.js";
@@ -227,6 +228,8 @@ const PDFViewerApplication = {
   pdfAttachmentViewer: null,
   /** @type {PDFLayerViewer} */
   pdfLayerViewer: null,
+  /** @type {PDFTTSViewer} */
+  pdfTTSViewer: null,
   /** @type {PDFCursorTools} */
   pdfCursorTools: null,
   /** @type {PDFScriptingManager} */
@@ -596,6 +599,12 @@ const PDFViewerApplication = {
       l10n: this.l10n,
     });
 
+    this.pdfTTSViewer = new PDFTTSViewer({
+      container: appConfig.sidebar.ttsView,
+      eventBus,
+      l10n: this.l10n,
+    });
+
     this.pdfSidebar = new PDFSidebar({
       elements: appConfig.sidebar,
       pdfViewer: this.pdfViewer,
@@ -655,6 +664,10 @@ const PDFViewerApplication = {
       return;
     }
     this.pdfViewer.currentScaleValue = DEFAULT_SCALE_VALUE;
+  },
+
+  ttsPlayPause() {
+    this.pdfTTSViewer.playpause();
   },
 
   get pagesCount() {
@@ -837,6 +850,7 @@ const PDFViewerApplication = {
     this.pdfOutlineViewer.reset();
     this.pdfAttachmentViewer.reset();
     this.pdfLayerViewer.reset();
+    this.pdfTTSViewer.reset();
 
     if (this.pdfHistory) {
       this.pdfHistory.reset();
@@ -1904,6 +1918,7 @@ const PDFViewerApplication = {
     eventBus._on("zoomin", webViewerZoomIn);
     eventBus._on("zoomout", webViewerZoomOut);
     eventBus._on("zoomreset", webViewerZoomReset);
+    eventBus._on("ttsplaypause", webViewerPlayPause);
     eventBus._on("pagenumberchanged", webViewerPageNumberChanged);
     eventBus._on("scalechanged", webViewerScaleChanged);
     eventBus._on("rotatecw", webViewerRotateCw);
@@ -2001,6 +2016,7 @@ const PDFViewerApplication = {
     eventBus._off("zoomin", webViewerZoomIn);
     eventBus._off("zoomout", webViewerZoomOut);
     eventBus._off("zoomreset", webViewerZoomReset);
+    eventBus._off("ttsplaypause", webViewerPlayPause);
     eventBus._off("pagenumberchanged", webViewerPageNumberChanged);
     eventBus._off("scalechanged", webViewerScaleChanged);
     eventBus._off("rotatecw", webViewerRotateCw);
@@ -2573,6 +2589,9 @@ function webViewerZoomOut() {
 }
 function webViewerZoomReset() {
   PDFViewerApplication.zoomReset();
+}
+function webViewerPlayPause() {
+  PDFViewerApplication.ttsPlayPause();
 }
 function webViewerPageNumberChanged(evt) {
   const pdfViewer = PDFViewerApplication.pdfViewer;
