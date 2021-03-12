@@ -1,0 +1,11 @@
+{
+  "ExpandedNodes": [
+    "",
+    "\\extensions\\firefox",
+    "\\extensions\\firefox\\content",
+    "\\extensions\\firefox\\tools",
+    "\\web"
+  ],
+  "SelectedNode": "\\web\\pdf_attachment_viewer.js",
+  "PreviewInSolutionExplorer": false
+}
